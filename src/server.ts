@@ -12,6 +12,7 @@ import { getServer } from "./mcpServer.js";
 // Start the server
 const PORT = 3000;
 const authEndpoint = process.env.AUTH_ENDPOINT || "http://localhost:8080/realms/master";
+const issuer = process.env.ISSUER || authEndpoint;
 
 const __dirname = import.meta.dirname;
 
@@ -81,7 +82,7 @@ app.all("/callback", (req: express.Request, res: express.Response) => {
 app.use(
     mcpAuthRouter({
         provider: proxyProvider,
-        issuerUrl: new URL(authEndpoint),
+        issuerUrl: new URL(issuer),
         baseUrl: new URL(`${authEndpoint}/protocol/openid-connect`),
     })
 );

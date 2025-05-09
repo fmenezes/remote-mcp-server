@@ -6,12 +6,12 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=development
-      - AUTH_ENDPOINT=http://auth:8080/realms/master
+      - AUTH_ENDPOINT=http://auth:9000/realms/master
   auth:
     image: keycloak/keycloak:latest
     ports:
-      - "8080:8080"
+      - "9000:9000"
     environment:
       - KC_BOOTSTRAP_ADMIN_USERNAME=admin
       - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
-    command: start-dev
+    command: start-dev --http-port 9000
