@@ -2,17 +2,15 @@ import path from "path";
 import express from "express";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
-import { ProxyOAuthServerProvider } from "@modelcontextprotocol/sdk/server/auth/providers/proxyProvider.js";
-import { mcpAuthRouter } from "@modelcontextprotocol/sdk/server/auth/router.js";
 import morgan from "morgan";
 import { randomUUID } from "crypto";
 import { InMemoryEventStore } from "./inMemoryEventStore.js";
 import { getServer } from "./mcpServer.js";
-import { OAuthMetadata } from "@modelcontextprotocol/sdk/shared/auth.js";
 
 // Start the server
 const PORT = 3000;
 const authEndpoint = process.env.AUTH_ENDPOINT || "http://localhost:9000/realms/master";
+const internalAuthEndpoint = process.env.INTERNAL_AUTH_ENDPOINT || authEndpoint;
 const issuer = process.env.ISSUER || authEndpoint;
 
 const __dirname = import.meta.dirname;
@@ -34,74 +32,26 @@ function asyncMiddleware(
     };
 }
 
+app.use("/.well-known/oauth-authorization-server", async (req: express.Request, res: express.Response) => {
+    const response = await fetch(`${internalAuthEndpoint}/.well-known/oauth-authorization-server`);
+    const metadata = await response.json();
 
-const proxyProvider = new ProxyOAuthServerProvider({
-    endpoints: {
-        authorizationUrl: `${authEndpoint}/protocol/openid-connect/authorize`,
-        tokenUrl: `${authEndpoint}/protocol/openid-connect/token`,
-        revocationUrl: `${authEndpoint}/protocol/openid-connect/revoke`,
-        registrationUrl: `${authEndpoint}/clients-registrations/openid-connect`,
-    },
-    verifyAccessToken: async (token: string) => {
-        return Promise.resolve({
-            token,
-            clientId: "0oaq1le5jlzxCuTbu357",
-            scopes: ["openid", "email", "profile"],
-        });
-    },
-    getClient: async (client_id: string) => {
-        return Promise.resolve({
-            client_id,
-            redirect_uris: [`http://localhost:${PORT}/callback`],
-        });
-    },
-});
-
-app.all("/callback", (req: express.Request, res: express.Response) => {
-    console.debug(
-        "Received callback:",
-        JSON.stringify(
-            {
-                method: req.method,
-                query: req.query,
-                headers: req.headers,
-                body: req.body,
-            },
-            null,
-            2
-        )
-    );
-
-    res.status(200).json({
-        method: req.method,
-        query: req.query,
-        headers: req.headers,
-        body: req.body,
+    res.json({
+        ...metadata,
+        authorization_endpoint: `${authEndpoint}/protocol/openid-connect/auth`,
+        token_endpoint: `${authEndpoint}/protocol/openid-connect/token`,
+        revocation_endpoint: `${authEndpoint}/protocol/openid-connect/revoke`,
+        registration_endpoint: `${authEndpoint}/clients-registrations/openid-connect`,
     });
 });
 
-app.use(
-    mcpAuthRouter({
-        provider: proxyProvider,
-        issuerUrl: new URL(issuer),
-        baseUrl: new URL(`${authEndpoint}/protocol/openid-connect`),
-        metadataModifier: (metadata: OAuthMetadata) => {
-            const authEndpoint = "http://localhost:9000/realms/master";
-            return {
-                ...metadata,
-                authorization_endpoint: `${authEndpoint}/protocol/openid-connect/authorize`,
-                token_endpoint: `${authEndpoint}/protocol/openid-connect/token`,
-                revocation_endpoint: `${authEndpoint}/protocol/openid-connect/revoke`,
-                registration_endpoint: `${authEndpoint}/clients-registrations/openid-connect`,
-            };
-        }
-    })
-);
-
 function ensureAuthenticated(req: express.Request, res: express.Response, next: express.NextFunction) {
-    console.log("QUERY:", JSON.stringify(req.query));
-    console.log("HEADERS:", JSON.stringify(req.headers));
-    res.status(401).send("Unauthorized");
+    if (!req.headers.authorization) {
+        res.status(401).send("Unauthorized");
+        return;
+    }
+
+    next();
 }
 
 // Map to store transports by session ID
