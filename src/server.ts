@@ -8,10 +8,11 @@ import morgan from "morgan";
 import { randomUUID } from "crypto";
 import { InMemoryEventStore } from "./inMemoryEventStore.js";
 import { getServer } from "./mcpServer.js";
+import { OAuthMetadata } from "@modelcontextprotocol/sdk/shared/auth.js";
 
 // Start the server
 const PORT = 3000;
-const authEndpoint = process.env.AUTH_ENDPOINT || "http://localhost:8080/realms/master";
+const authEndpoint = process.env.AUTH_ENDPOINT || "http://localhost:9000/realms/master";
 const issuer = process.env.ISSUER || authEndpoint;
 
 const __dirname = import.meta.dirname;
@@ -41,7 +42,7 @@ const proxyProvider = new ProxyOAuthServerProvider({
         revocationUrl: `${authEndpoint}/protocol/openid-connect/revoke`,
         registrationUrl: `${authEndpoint}/clients-registrations/openid-connect`,
     },
-    verifyAccessToken: async (token) => {
+    verifyAccessToken: async (token: string) => {
         return Promise.resolve({
             token,
             clientId: "0oaq1le5jlzxCuTbu357",
@@ -84,6 +85,16 @@ app.use(
         provider: proxyProvider,
         issuerUrl: new URL(issuer),
         baseUrl: new URL(`${authEndpoint}/protocol/openid-connect`),
+        metadataModifier: (metadata: OAuthMetadata) => {
+            const authEndpoint = "http://localhost:9000/realms/master";
+            return {
+                ...metadata,
+                authorization_endpoint: `${authEndpoint}/protocol/openid-connect/authorize`,
+                token_endpoint: `${authEndpoint}/protocol/openid-connect/token`,
+                revocation_endpoint: `${authEndpoint}/protocol/openid-connect/revoke`,
+                registration_endpoint: `${authEndpoint}/clients-registrations/openid-connect`,
+            };
+        }
     })
 );
 
