@@ -7,7 +7,7 @@ export function getServer() {
         version: packageJson.version,
     });
 
-    mcpServer.tool("hello", () => {
+    mcpServer.tool("hello", {}, async () => {
         return {
             content: [
                 {

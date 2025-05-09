@@ -1,9 +1,23 @@
-FROM node:23-alpine
+FROM node:20-alpine
 
 WORKDIR /app
 
-COPY . .
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
 RUN npm install
+
+# Copy source code and SDK
+COPY . .
+
+# Build the SDK first
+WORKDIR /app/third_party/@modelcontextprotocol/sdk
+RUN npm install
+RUN npm run build
+
+# Build the main application
+WORKDIR /app
 RUN npm run build
 
 EXPOSE 3000

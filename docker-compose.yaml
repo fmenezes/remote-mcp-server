@@ -6,6 +6,7 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=development
+      - ISSUER=http://localhost:9000/realms/master
       - AUTH_ENDPOINT=http://auth:9000/realms/master
   auth:
     image: keycloak/keycloak:latest
