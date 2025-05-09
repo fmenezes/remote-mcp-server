@@ -35,10 +35,10 @@ function asyncMiddleware(
 
 const proxyProvider = new ProxyOAuthServerProvider({
     endpoints: {
-        authorizationUrl: "http://localhost:8080/realms/master/protocol/openid-connect/authorize",
-        tokenUrl: "http://localhost:8080/realms/master/protocol/openid-connect/token",
-        revocationUrl: "http://localhost:8080/realms/master/protocol/openid-connect/revoke",
-        registrationUrl: "http://localhost:8080/realms/master/clients-registrations/openid-connect",
+        authorizationUrl: `${authEndpoint}/protocol/openid-connect/authorize`,
+        tokenUrl: `${authEndpoint}/protocol/openid-connect/token`,
+        revocationUrl: `${authEndpoint}/protocol/openid-connect/revoke`,
+        registrationUrl: `${authEndpoint}/clients-registrations/openid-connect`,
     },
     verifyAccessToken: async (token) => {
         return Promise.resolve({
@@ -81,8 +81,8 @@ app.all("/callback", (req: express.Request, res: express.Response) => {
 app.use(
     mcpAuthRouter({
         provider: proxyProvider,
-        issuerUrl: new URL("http://localhost:8080/realms/master"),
-        baseUrl: new URL("http://localhost:8080/realms/master/protocol/openid-connect"),
+        issuerUrl: new URL(authEndpoint),
+        baseUrl: new URL(`${authEndpoint}/protocol/openid-connect`),
     })
 );
 
