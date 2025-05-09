@@ -11,10 +11,11 @@
     "build:compile": "tsc",
     "build": "npm run build:clean && npm run build:compile",
     "start": "node dist/server.js",
-    "inspect": "npx -y @modelcontextprotocol/inspector -- npx -y mcp-remote http://localhost:3000 --allow-http"
+    "inspect": "mcp-inspector -- npx -y mcp-remote http://localhost:3000/mcp --allow-http"
   },
   "license": "MIT",
   "devDependencies": {
+    "@modelcontextprotocol/inspector": "^0.11.0",
     "@types/express": "^5.0.1",
     "@types/morgan": "^1.9.9",
     "@types/node": "^22.14.0",

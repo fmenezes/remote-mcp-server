@@ -5,10 +5,9 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NODE_ENV=development
-      - ISSUER=http://localhost:9000/realms/master
-      - INTERNAL_AUTH_ENDPOINT=http://auth:9000/realms/master
       - AUTH_ENDPOINT=http://localhost:9000/realms/master
+    env_file:
+      - .env
   auth:
     image: keycloak/keycloak:latest
     ports:
