@@ -5,14 +5,20 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - AUTH_ENDPOINT=http://localhost:9000/realms/master
-    env_file:
-      - .env
-  auth:
+      - AUTH_SERVER_URL=http://auth-server:8080/realms/test
+      - AUTH_HOST=http://localhost:8080
+    depends_on:
+      - auth-server
+  auth-server:
     image: keycloak/keycloak:latest
     ports:
-      - "9000:9000"
+      - "8080:8080"
     environment:
       - KC_BOOTSTRAP_ADMIN_USERNAME=admin
       - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
-    command: start-dev --http-port 9000
+      - KC_PROXY_HEADERS=forwarded
+    volumes:
+      - ./keycloak/import:/opt/keycloak/data/import
+      - ./keycloak/startup.sh:/opt/keycloak/bin/startup.sh
+    entrypoint: [""]
+    command: ["/bin/bash", "-c", "/opt/keycloak/bin/startup.sh"]
