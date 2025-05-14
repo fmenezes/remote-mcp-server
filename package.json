@@ -11,7 +11,7 @@
     "build:compile": "tsc",
     "build": "npm run build:clean && npm run build:compile",
     "start": "node dist/server.js",
-    "inspect": "mcp-inspector -- npx -y mcp-remote http://localhost:3000/mcp --allow-http --clientId test --scope openid"
+    "inspect": "mcp-inspector -- npx -y mcp-remote http://localhost:3000/mcp --allow-http --client-id test --scope openid"
   },
   "license": "MIT",
   "devDependencies": {
